@@ -34,12 +34,10 @@ public class Main extends Application {
     public static final int FRAMES_PER_SECOND = 100;
     public static final int MILLISECOND_DELAY = 1000 / FRAMES_PER_SECOND;
     public static final double SECOND_DELAY = 1.0 / FRAMES_PER_SECOND;
-
     public static final Paint BACKGROUND_LEVEL_1 = Color.LIGHTYELLOW;
     public static final Paint BACKGROUND_LEVEL_2 = Color.LIGHTBLUE;
     public static final Paint BACKGROUND_LEVEL_3 = Color.LIGHTCORAL;
     public static final Paint BACKGROUND_SPLASH = Color.WHITESMOKE;
-
     public static final Paint BLOCK_COLOR_1 = Color.YELLOW;
     public static final Paint BLOCK_COLOR_2 = Color.ORANGE;
     public static final Paint BLOCK_COLOR_3 = Color.ORANGERED;
@@ -49,25 +47,22 @@ public class Main extends Application {
     public static final Paint BLOCK_COLOR_7 = Color.PINK;
     public static final Paint BLOCK_COLOR_8 = Color.LAVENDER;
     public static final Paint BLOCK_COLOR_9 = Color.FUCHSIA;
-
     public static final Paint POWER_COLOR_1 = Color.LIGHTGRAY;
-    public static final Paint POWER_COLOR_2 = Color.LIGHTGREEN;
+    public static final Paint POWER_COLOR_2 = Color.LIGHTSEAGREEN;
     public static final Paint POWER_COLOR_3 = Color.LIGHTBLUE;
-
     public static final int BLOCK_SIZE = 50;
     public static final String BOUNCER_IMAGE = "ball.gif";
     public static final String POWER_BALL_IMAGE = "extraballpower.gif";
     public static final String POWER_DAMAGE_IMAGE = "laserpower.gif";
     public static final String POWER_LIFE_IMAGE = "pointspower.gif";
-    //public static final String POWER_DAMAGE_IMAGE = "extraballpower.gif";
-
+    private int timer = 0;
+    private int blink;
     private int BALL_X_SPEED = 200;
     private int BALL_Y_SPEED = 200;
     private int totalBlocks = 0;
     private int POWERUP_SPEED = 200;
     private int PADDLE_SPEED = 20;
     private Integer currentLevel = 1;
-
     private int BREAK_STRENGTH, lives;
     private Ball ball, newBall;
     private Stage window;
@@ -82,10 +77,17 @@ public class Main extends Application {
     private Group root;
     private Text score, desc, livesTag, win, deadText;
     private Timeline animation;
-    private Button resetButton, nextLevel;
+    private Button resetButton, nextLevel, play;
 
     @Override
     public void start (Stage stage) {
+        setUpArrays();
+        splash = setUpSplash(stage);
+        stage.setScene(splash);
+        stage.show();
+    }
+
+    private void setUpArrays() {
         levelbackgrounds = new ArrayList<Paint>();
         levelbackgrounds.add(BACKGROUND_LEVEL_1);
         levelbackgrounds.add(BACKGROUND_LEVEL_2);
@@ -104,32 +106,40 @@ public class Main extends Application {
         powerColor.add(POWER_COLOR_1);
         powerColor.add(POWER_COLOR_2);
         powerColor.add(POWER_COLOR_3);
-        splash = setUpSplash(stage);
-        stage.setScene(splash);
-        stage.show();
     }
+
     private Scene setUpSplash(Stage stage){
         stage.setTitle("BREAKOUT BY LORNE ZHANG");
-
         Group splashBlocks = new Group();
-        Button Play = new Button("PLAY!");
-        Text welcome = new Text("WELCOME TO THE GAME!");
-        Play.setOnAction(e -> startGame(stage));
-        Play.setLayoutX(250);
-        Play.setLayoutY(220);
-        welcome.setLayoutX(250);
-        welcome.setLayoutY(100);
-        splashBlocks.getChildren().add(Play);
+        play = createButton(stage, "PLAY!", 250, 220);
+        Text welcome = createText("Welcome to the game!", 250, 100);
+        splashBlocks.getChildren().add(play);
         splashBlocks.getChildren().add(welcome);
         Scene splash = new Scene(splashBlocks, Main.SIZE + MENU_SIZE, Main.SIZE, BACKGROUND_SPLASH);
         return splash;
     }
+
+    private Text createText(String s, double i, double i1) {
+        Text text = new Text(s);
+        text.setLayoutX(i);
+        text.setLayoutY(i1);
+        return text;
+    }
+
+    private Button createButton(Stage stage, String text, double x, double y) {
+        Button button = new Button(text);
+        button.setOnAction(e -> startGame(stage));
+        button.setLayoutX(x);
+        button.setLayoutY(y);
+        return button;
+    }
+
     void startGame(Stage stage) {
         lives = 3;
         BREAK_STRENGTH=1;
         homeScreen = setupLevel(levelbackgrounds.get(currentLevel-1), currentLevel);
         homeScreen.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
-        resetButton();
+        resetButton = createButton(window, "Play Again", SIZE + 30, 180);
         winButton();
         nextLevelButton();
         window = stage;
@@ -142,12 +152,7 @@ public class Main extends Application {
         animation.getKeyFrames().add(frame);
         animation.play();
     }
-    private void resetButton() {
-        resetButton = new Button("Play Again");
-        resetButton.setOnAction(e -> restart(window));
-        resetButton.setLayoutX(SIZE + 30);
-        resetButton.setLayoutY(180);
-    }
+
     private void winButton() {
         win = new Text("YOU WIN");
         win.setX(SIZE + 30);
@@ -172,13 +177,13 @@ public class Main extends Application {
         ball = new Ball(280, 570, BALL_X_SPEED, -BALL_Y_SPEED, imageBouncer);
         levelballs.add(ball);
         root.getChildren().add(ball);
-        Rectangle Bar = new Rectangle( SIZE + 10, 0, 10, SIZE);
         paddleLeft = new Rectangle( 250, 585, 30, 10);
         paddleMiddle = new Rectangle( 280, 585, 30, 10);
         paddleRight = new Rectangle( 310, 585, 30, 10);
         levelpaddles.add(paddleLeft);
         levelpaddles.add(paddleRight);
         levelpaddles.add(paddleMiddle);
+        Rectangle Bar = new Rectangle( SIZE + 10, 0, 10, SIZE);
         root.getChildren().add(Bar);
         root.getChildren().add(paddleLeft);
         root.getChildren().add(paddleMiddle);
@@ -214,6 +219,7 @@ public class Main extends Application {
         List<PowerUp> toRemovePower = new ArrayList<PowerUp>();
         boolean addball = false;
         ArrayList<BrickHeavy> toRemoveBrick = new ArrayList<BrickHeavy>();
+        stepMovingBrick(elapsedTime);
         for (PowerUp checkPower : levelpowerups){
             if(stepPower(elapsedTime, checkPower)){
                 if(checkPower.getPower().equals("DoubleDamage")){
@@ -258,6 +264,17 @@ public class Main extends Application {
             loseLevel();
         }
     }
+
+    private void stepMovingBrick(double elapsedTime) {
+        for(BrickHeavy brick : levelblocks){
+            if(brick.getMoving()){
+                brick.setX(brick.getX() + brick.getXSpeed()*elapsedTime);
+            }
+            if (brick.getX() >= SIZE-25 || brick.getX() <= 0){
+                brick.setXSpeed(brick.getXSpeed() * (-1));
+            }
+        }
+    }
     private boolean stepPower(double elapsedTime, PowerUp checkPower) {
         if(paddleMiddle.intersects(checkPower.getX(), checkPower.getY(), 20,5)){
             return true;
@@ -272,6 +289,7 @@ public class Main extends Application {
         return false;
     }
     private boolean stepBrick(Ball check){
+        timer = timer + 1;
         double Bounce_X = check.getX();
         double Bounce_Y = check.getY();
         ArrayList<BrickHeavy> toRemoveBrick = new ArrayList<BrickHeavy>();
@@ -301,7 +319,17 @@ public class Main extends Application {
                     checkBrick.setDurability(checkBrick.getDurability() - BREAK_STRENGTH);
                     checkBrick.setFill(brickColor.get(checkBrick.getDurability()-1));
                 }
+
             }
+            if(blink == 1){
+                if(timer % 500 > 250){
+                    checkBrick.setFill(Color.TRANSPARENT);
+                }
+                else{
+                    checkBrick.setFill(brickColor.get(checkBrick.getDurability()-1));
+                }
+            }
+
         }
         levelblocks.removeAll(toRemoveBrick);
         root.getChildren().removeAll(toRemoveBrick);
@@ -421,6 +449,7 @@ public class Main extends Application {
         try {
             String i;
             BufferedReader r=new BufferedReader(new FileReader("src/breakout/level"+Integer.toString(currentLevel)+".txt"));
+            blink = Integer.parseInt(r.readLine());
             int rows = Integer.parseInt(r.readLine());
             int columns = Integer.parseInt(r.readLine());
             totalBlocks = Integer.parseInt(r.readLine());
@@ -430,43 +459,42 @@ public class Main extends Application {
                 for(int f=0; f<i.length(); f++){
                     String x = i.substring(f,f+1);
                     BrickHeavy blockToBeAdded;
+                    BrickMoving movingBlockToBeAdded;
                     int blockNumber;
                     if(x.equals("d")){
                         blockNumber = 1;
-                        blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, blockNumber, "DoubleDamage");
-                        blockToBeAdded.setArcWidth(5);
-                        blockToBeAdded.setArcHeight(5);
+                        blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "DoubleDamage", false, 0);
                         colsadded = colsadded + 1;
-                        blockToBeAdded.setFill(powerColor.get(0));
                     }
                     else if(x.equals("a")){
-                        blockNumber = 1;
-                        blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, blockNumber, "AddBall");
-                        blockToBeAdded.setArcWidth(5);
-                        blockToBeAdded.setArcHeight(5);
+                        blockNumber = 2;
+                        blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "AddBall", false, 0);
                         colsadded = colsadded + 1;
-                        blockToBeAdded.setFill(powerColor.get(1));
+                    }
+                    else if(x.equals("m")){
+                        blockNumber = 1;
+                        blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "NONE", true, 50);
+                        colsadded = colsadded + 1;
+                    }
+                    else if(x.equals("n")){
+                        blockNumber = 2;
+                        blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "NONE", true, 100);
+                        colsadded = colsadded + 1;
                     }
                     else if(x.equals("i")){
-                        blockNumber = 1;
-                        blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, blockNumber, "AddLife");
-                        blockToBeAdded.setArcWidth(5);
-                        blockToBeAdded.setArcHeight(5);
+                        blockNumber = 3;
+                        blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "AddLife", false, 0);
                         colsadded = colsadded + 1;
-                        blockToBeAdded.setFill(powerColor.get(2));
                     }
                     else{
                         blockNumber = Integer.parseInt(x);
                         if(blockNumber == 0){
                             colsadded = colsadded + 1;
-                            blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, 1, "NONE");
+                            blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, 1, "NONE", false, 0);
                         }
                         else{
-                            blockToBeAdded = new BrickHeavy( colsadded*50 + 20, rowsadded*30 + 10, BLOCK_SIZE/1.5, BLOCK_SIZE/3, blockNumber, "NONE");
+                            blockToBeAdded = createHeavyBrick(rowsadded, colsadded, blockNumber, "NONE", false, 0);
                             colsadded = colsadded + 1;
-                            blockToBeAdded.setArcWidth(5);
-                            blockToBeAdded.setArcHeight(5);
-                            blockToBeAdded.setFill(brickColor.get(blockNumber-1));
                         }
                     }
                     if(colsadded == columns){
@@ -483,6 +511,24 @@ public class Main extends Application {
             ie.printStackTrace();
         }
         return blocks;
+    }
+
+
+
+    private BrickHeavy createHeavyBrick(int rowsadded, int colsadded, int blockNumber, String power, boolean moving, double speed) {
+        BrickHeavy blockToBeAdded;
+        if(power.equals("NONE")){
+            blockToBeAdded = new BrickHeavy(colsadded * 50 + 20, rowsadded * 30 + 10, BLOCK_SIZE / 1.5, BLOCK_SIZE / 3, blockNumber, power, moving, speed);
+            blockToBeAdded.setFill(brickColor.get(blockNumber -1));
+
+        }
+        else {
+            blockToBeAdded = new BrickHeavy(colsadded * 50 + 20, rowsadded * 30 + 10, BLOCK_SIZE / 1.5, BLOCK_SIZE / 3, 1, power, moving, speed);
+            blockToBeAdded.setFill(powerColor.get(blockNumber -1)); 
+        }
+        blockToBeAdded.setArcWidth(5);
+        blockToBeAdded.setArcHeight(5);
+        return blockToBeAdded;
     }
     private void handleKeyInput (KeyCode code) {
         if (code == KeyCode.RIGHT) {
@@ -512,14 +558,12 @@ public class Main extends Application {
             setLevel(3);
         }
     }
-
     private void setLevel(int i) {
         currentLevel = i;
         cleanLevel();
         animation.stop();
         startGame(window);
     }
-
     private void addBall() {
         Image imageBouncer = new Image(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(BOUNCER_IMAGE)));
         Ball add = new Ball(paddleMiddle.getX(), paddleMiddle.getY()-10, BALL_X_SPEED, -BALL_Y_SPEED, imageBouncer);
