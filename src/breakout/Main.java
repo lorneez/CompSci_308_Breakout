@@ -79,6 +79,10 @@ public class Main extends Application {
     private Timeline animation;
     private Button resetButton, nextLevel, play;
 
+    /**
+     * Start method that begins the game
+     * Stage stage is the stage being displayed
+     */
     @Override
     public void start (Stage stage) {
         setUpArrays();
@@ -86,7 +90,9 @@ public class Main extends Application {
         stage.setScene(splash);
         stage.show();
     }
-
+    /**
+     * Initializes the arrays being used to hold color information
+     */
     private void setUpArrays() {
         levelbackgrounds = new ArrayList<Paint>();
         levelbackgrounds.add(BACKGROUND_LEVEL_1);
@@ -107,25 +113,41 @@ public class Main extends Application {
         powerColor.add(POWER_COLOR_2);
         powerColor.add(POWER_COLOR_3);
     }
-
+    /**
+     * Sets up splash screen
+     * Stage stage is the stage being displayed
+     */
     private Scene setUpSplash(Stage stage){
-        stage.setTitle("BREAKOUT BY LORNE ZHANG");
+        stage.setTitle("Breakout created by Lorne Zhang, Duke CompSci 308 Spring 2020");
         Group splashBlocks = new Group();
-        play = createButton(stage, "PLAY!", 250, 220);
-        Text welcome = createText("Welcome to the game!", 250, 100);
+        play = createButton(stage, "Enter level 1!", 150, 300);
+        Text welcome = createText("Welcome to Breakout!", 150, 100);
+        Text instructions = createText("Instructions:\n1. Drag the game screen to the top-left corner of your computer\nscreen for best performance.\n2. Move your mouse to control the paddle and keep the balls alive\n3. Win the game by breaking all the blocks on the screen before\nyou lose all three lives.\n4. Different color blocks have different durabilities. Some blocks\nwill move and some levels will have blinking blocks.\n5. Have fun and good luck!", 150, 130);
         splashBlocks.getChildren().add(play);
         splashBlocks.getChildren().add(welcome);
+        splashBlocks.getChildren().add(instructions);
         Scene splash = new Scene(splashBlocks, Main.SIZE + MENU_SIZE, Main.SIZE, BACKGROUND_SPLASH);
         return splash;
     }
-
+    /**
+     * A genaric method to create text
+     * Sting s is the text information
+     * double i is the x position
+     * double i1 is the y position
+     */
     private Text createText(String s, double i, double i1) {
         Text text = new Text(s);
         text.setLayoutX(i);
         text.setLayoutY(i1);
         return text;
     }
-
+    /**
+     * A genaric method to create buttons
+     * Stage stage is the stage being displayed
+     * String text is the text on the button
+     * double x is the x position
+     * double y is the y position
+     */
     private Button createButton(Stage stage, String text, double x, double y) {
         Button button = new Button(text);
         button.setOnAction(e -> startGame(stage));
@@ -133,17 +155,20 @@ public class Main extends Application {
         button.setLayoutY(y);
         return button;
     }
-
+    /**
+     * Starts the game using the stage
+     * Stage stage is the stage being displayed
+     */
     void startGame(Stage stage) {
         lives = 3;
         BREAK_STRENGTH=1;
         homeScreen = setupLevel(levelbackgrounds.get(currentLevel-1), currentLevel);
         homeScreen.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
-        resetButton = createButton(window, "Play Again", SIZE + 30, 180);
+        resetButton = createButton(window, "Play Again!", SIZE + 30, 180);
         winButton();
         nextLevelButton();
         window = stage;
-        window.setTitle("BREAKOUT LEVEL " + Integer.toString(currentLevel));
+        window.setTitle("Breakout: Level " + Integer.toString(currentLevel));
         window.setScene(homeScreen);
         window.show();
         KeyFrame frame = new KeyFrame(Duration.millis(MILLISECOND_DELAY), e -> step(SECOND_DELAY));
@@ -152,14 +177,19 @@ public class Main extends Application {
         animation.getKeyFrames().add(frame);
         animation.play();
     }
-
+    /**
+     * Creates the win button
+     */
     private void winButton() {
-        win = new Text("YOU WIN");
+        win = new Text("CONGRATULATIONS!!!\nYou Win");
         win.setX(SIZE + 30);
         win.setY(100);
     }
+    /**
+     * Creates the next level button
+     */
     private void nextLevelButton() {
-        nextLevel = new Button("Next Level");
+        nextLevel = new Button("Enter Next Level");
         nextLevel.setOnAction(e -> {
             currentLevel = currentLevel + 1;
             restart(window);
@@ -167,6 +197,11 @@ public class Main extends Application {
         nextLevel.setLayoutX(SIZE + 30);
         nextLevel.setLayoutY(180);
     }
+    /**
+     * sets up the root and paddles of the current level along with initializing the arraylists that contain all the level elements
+     * Paint background is the background color of the current level
+     * int level is the current level
+     */
     private Scene setupLevel(Paint background, int level) {
         root = new Group();
         levelblocks = new ArrayList<BrickHeavy>();
@@ -193,14 +228,18 @@ public class Main extends Application {
         root.getChildren().addAll(levelblocks);
         return new Scene(root, Main.SIZE + MENU_SIZE, Main.SIZE, background);
     }
+    /**
+     * initializes the text of the current level
+     * int level is the current level
+     */
     private void setUpText(int level) {
-        score = new Text("Welcome to LEVEL " + Integer.toString(level));
+        score = new Text("Welcome to Level " + Integer.toString(level));
         score.setX(SIZE + 30);
         score.setY(100);
-        desc = new Text("Welcome to LEVEL" + Integer.toString(level));
+        desc = new Text("Welcome to Level" + Integer.toString(level));
         desc.setX(SIZE + 30);
         desc.setY(80);
-        deadText = new Text("YOU LOST");
+        deadText = new Text("Good try!\nYou are out of lives.");
         deadText.setX(SIZE + 30);
         deadText.setY(100);
         livesTag = new Text("Lives: " + Integer.toString(lives));
@@ -210,11 +249,18 @@ public class Main extends Application {
         root.getChildren().add(desc);
         root.getChildren().add(livesTag);
     }
+    /**
+     * The main step function that loops through all aspects of the game to update it
+     * double elapsedTime is the amount of time that has occurred
+     */
     private void step (double elapsedTime) {
+        timer = timer + 1;
         Point p = MouseInfo.getPointerInfo().getLocation();
-        paddleLeft.setX(p.x - 30);
-        paddleMiddle.setX(p.x);
-        paddleRight.setX(p.x + 30);
+        if(p.x > 5 && p.x < SIZE-45){
+            paddleLeft.setX(p.x - 30);
+            paddleMiddle.setX(p.x);
+            paddleRight.setX(p.x + 30);
+        }
         List<Ball> toRemove = new ArrayList<Ball>();
         List<PowerUp> toRemovePower = new ArrayList<PowerUp>();
         boolean addball = false;
@@ -264,7 +310,10 @@ public class Main extends Application {
             loseLevel();
         }
     }
-
+    /**
+     * A sub step function that updates the position of moving blocks
+     * double elapsedTime is the amount of time that has occurred
+     */
     private void stepMovingBrick(double elapsedTime) {
         for(BrickHeavy brick : levelblocks){
             if(brick.getMoving()){
@@ -275,6 +324,11 @@ public class Main extends Application {
             }
         }
     }
+    /**
+     * A sub step function that updates the position of dropping powers
+     * double elapsedTime is the amount of time that has occurred
+     * Powerup checkPower is the powerup block that is being checked
+     */
     private boolean stepPower(double elapsedTime, PowerUp checkPower) {
         if(paddleMiddle.intersects(checkPower.getX(), checkPower.getY(), 20,5)){
             return true;
@@ -288,8 +342,12 @@ public class Main extends Application {
         checkPower.setYPos(checkPower.getYPos() + elapsedTime * POWERUP_SPEED);
         return false;
     }
+    /**
+     * A sub step function that checks if the ball intersects any bricks
+     * Ball check is the ball being checked
+     */
     private boolean stepBrick(Ball check){
-        timer = timer + 1;
+
         double Bounce_X = check.getX();
         double Bounce_Y = check.getY();
         ArrayList<BrickHeavy> toRemoveBrick = new ArrayList<BrickHeavy>();
@@ -327,7 +385,13 @@ public class Main extends Application {
                 }
                 else{
                     checkBrick.setFill(brickColor.get(checkBrick.getDurability()-1));
-                }
+                }    /**
+                 * A sub step function that updates the position of moving blocks
+                 * double elapsedTime is the amount of time that has occurred
+                 */
+            }
+            if(timer == 500){
+                timer = timer - 500;
             }
 
         }
@@ -335,14 +399,23 @@ public class Main extends Application {
         root.getChildren().removeAll(toRemoveBrick);
         return addball;
     }
-
-    private void createPower(BrickHeavy checkBrick, String powerDamageImage, String doubleDamage) {
+    /**
+     * Creates the power drops
+     * BrickHeavy checkBrick is the brick being checked
+     * String powerDamageImage is image of the power
+     * String power is the power
+     */
+    private void createPower(BrickHeavy checkBrick, String powerDamageImage, String power) {
         Image imageDamage = new Image(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(powerDamageImage)));
-        PowerUp newPower = new PowerUp(checkBrick.getX(), checkBrick.getY(), POWERUP_SPEED, imageDamage, doubleDamage);
+        PowerUp newPower = new PowerUp(checkBrick.getX(), checkBrick.getY(), POWERUP_SPEED, imageDamage, power);
         levelpowerups.add(newPower);
         root.getChildren().add(newPower);
     }
-
+    /**
+     * A sub step function that analyzes if the ball intersects the paddle or hits the edge of the game screen
+     * double elapsedTime is the amount of time that has occurred
+     * Ball check is the ball being checked
+     */
     private boolean stepBall(double elapsedTime, Ball check) {
         double Bounce_X = check.getXPos();
         double Bounce_Y = check.getYPos();
@@ -351,7 +424,7 @@ public class Main extends Application {
         }
         if (Bounce_Y >= SIZE) {
             check.setYSpeed(check.getYSpeed() * (-1));
-            loseLife(check);
+            loseLife();
             System.out.println("<<< Lost Ball >>>");
             return true;
         }
@@ -387,6 +460,11 @@ public class Main extends Application {
         check.setYPos(check.getYPos() + check.getYSpeed() * elapsedTime);
         return false;
     }
+    /**
+     * Determines how the ball reacts to hitting the paddle
+     * boolean b is whether the ball needs to change direction in the x direction
+     * Ball hit is the ball that intersects with the paddle
+     */
     private void paddleSpeedChange(boolean b, Ball hit) {
         if (b) {
             hit.setXSpeed(hit.getXSpeed() * (-1));
@@ -398,6 +476,9 @@ public class Main extends Application {
             hit.setXSpeed(-BALL_X_SPEED);
         }
     }
+    /**
+     * Updates the screen information when the player loses a level
+     */
     private void loseLevel() {
         score.setText("You LOSE!");
         root.getChildren().add(deadText);
@@ -405,6 +486,9 @@ public class Main extends Application {
         root.getChildren().add(resetButton);
         animation.stop();
     }
+    /**
+     * Updates the screen information when the player beats a level
+     */
     private void winLevel() {
         score.setText("You WIN!");
         root.getChildren().add(win);
@@ -417,12 +501,15 @@ public class Main extends Application {
         }
         animation.stop();
     }
+    /**
+     * Ends the game when the player wins the game
+     */
     private void end() {
         Group endGroup = new Group();
-        Button Play = new Button("PLAY AGAIN!");
+        Button Play = new Button("Play Again!");
         Play.setOnAction(e -> start(window));
         Text thanks = new Text();
-        thanks.setText("THANKS FOR PLAYING YOU WIN!!!");
+        thanks.setText("Thanks for playing! You win!!!");
         thanks.setLayoutX(300);
         thanks.setLayoutY(100);
         currentLevel = 1;
@@ -433,6 +520,9 @@ public class Main extends Application {
         Scene end = new Scene(endGroup, Main.SIZE + MENU_SIZE, Main.SIZE, Color.WHITESMOKE);
         window.setScene(end);
     }
+    /**
+     * Cleans the level by removing elements from root
+     */
     private void cleanLevel() {
         root.getChildren().remove(ball);
         for(Ball ball : levelballs){
@@ -444,6 +534,11 @@ public class Main extends Application {
         root.getChildren().remove(score);
         root.getChildren().remove(paddleRight);
     }
+    /**
+     * Generates the level's bricks
+     * int currentLevel is the level being generated
+     * int width and int height are the height and width of the screen
+     */
     private ArrayList<BrickHeavy> generateBlocks2 (int currentLevel, int width, int height) {
         ArrayList<BrickHeavy> blocks = new ArrayList<>();
         try {
@@ -512,9 +607,15 @@ public class Main extends Application {
         }
         return blocks;
     }
-
-
-
+    /**
+     * Create a heavy brick
+     * int rowsadded is the current row number
+     * int colsadded is the current column number
+     * int blockNumber is the block durability
+     * String power is the power attached to the block
+     * boolean moving determines if the block is moving
+     * double speed is the block's speed
+     */
     private BrickHeavy createHeavyBrick(int rowsadded, int colsadded, int blockNumber, String power, boolean moving, double speed) {
         BrickHeavy blockToBeAdded;
         if(power.equals("NONE")){
@@ -530,16 +631,12 @@ public class Main extends Application {
         blockToBeAdded.setArcHeight(5);
         return blockToBeAdded;
     }
+    /**
+     * Handle keyboard inputs
+     * Keycode code is the keyboard input
+     */
     private void handleKeyInput (KeyCode code) {
-        if (code == KeyCode.RIGHT) {
-            updatePaddleX(paddleLeft.getX() + PADDLE_SPEED, paddleRight.getX() + PADDLE_SPEED, paddleMiddle.getX() + PADDLE_SPEED);
-        } else if (code == KeyCode.LEFT) {
-            updatePaddleX(paddleLeft.getX() - PADDLE_SPEED, paddleRight.getX() - PADDLE_SPEED, paddleMiddle.getX() - PADDLE_SPEED);
-        } else if (code == KeyCode.UP) {
-            updatePaddleY(paddleLeft.getY() - PADDLE_SPEED, paddleRight.getY() - PADDLE_SPEED, paddleMiddle.getY() - PADDLE_SPEED);
-        } else if (code == KeyCode.DOWN) {
-            updatePaddleY(paddleLeft.getY() + PADDLE_SPEED, paddleRight.getY() + PADDLE_SPEED, paddleMiddle.getY() + PADDLE_SPEED);
-        } else if (code.getChar().equals("W")) {
+        if (code.getChar().equals("W")) {
             winLevel();
         } else if (code.getChar().equals("Q")) {
             loseLevel();
@@ -558,24 +655,29 @@ public class Main extends Application {
             setLevel(3);
         }
     }
+    /**
+     * Set level to int i
+     * Begin restarting the game by clearing the level and stopping the animation
+     */
     private void setLevel(int i) {
         currentLevel = i;
         cleanLevel();
         animation.stop();
         startGame(window);
     }
+    /**
+     * Add a ball to the game
+     */
     private void addBall() {
         Image imageBouncer = new Image(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(BOUNCER_IMAGE)));
         Ball add = new Ball(paddleMiddle.getX(), paddleMiddle.getY()-10, BALL_X_SPEED, -BALL_Y_SPEED, imageBouncer);
         levelballs.add(add);
         root.getChildren().add(add);
     }
-    private void updatePaddleX(double v, double v2, double v3) {
-        paddleLeft.setX(v);
-        paddleRight.setX(v2);
-        paddleMiddle.setX(v3);
-    }
-    private void loseLife (Ball check) {
+    /**
+     * Lose a life
+     */
+    private void loseLife () {
         if(levelballs.size() > 1){
             return;
         }
@@ -585,23 +687,37 @@ public class Main extends Application {
             resetBallPaddle();
         }
     }
+    /**
+     * Reset paddle and ball to initial position after losing a life
+     */
     void resetBallPaddle(){
         Image imageBouncer = new Image(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(BOUNCER_IMAGE)));
         newBall = new Ball(280, 570, BALL_X_SPEED, -BALL_Y_SPEED, imageBouncer);
         if(newBall.getYSpeed() > 0){
             newBall.setYSpeed(ball.getYSpeed() * (-1));
         }
-        updatePaddleX(250, 280, 310);
         updatePaddleY(585, 585, 585);
     }
+    /**
+     * Update paddle position
+     * double i is the updated y coordinate for the left paddle
+     * double i2 is the updated y coordinate for the right paddle
+     * double i3 is the updated y coordinate for the middle paddle
+     */
     private void updatePaddleY(double i, double i2, double i3) {
         paddleLeft.setY(i);
         paddleRight.setY(i2);
         paddleMiddle.setY(i3);
     }
+    /**
+     * Restart the game
+     */
     void restart(Stage stage) {
         startGame(stage);
     }
+    /**
+     * Start the game
+     */
     public static void main (String[] args) {
         launch(args);
     }
