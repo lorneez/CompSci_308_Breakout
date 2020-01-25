@@ -412,6 +412,7 @@ public class Main extends Application {
         root.getChildren().add(newPower);
     }
     /**
+     *
      * A sub step function that analyzes if the ball intersects the paddle or hits the edge of the game screen
      * double elapsedTime is the amount of time that has occurred
      * Ball check is the ball being checked
@@ -722,3 +723,11 @@ public class Main extends Application {
         launch(args);
     }
 }
+
+
+
+
+
+
+
+
